@@ -1,1 +1,1 @@
-web:gunicorn waitercaller:app
+web: gunicorn waitercaller:app
