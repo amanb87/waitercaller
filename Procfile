@@ -1,1 +1,1 @@
-web: gunicorn waitercaller:app
+web: gunicorn 0.0.0.0:8000 waitercaller:app
