@@ -1,1 +1,1 @@
-web:python waitercaller.py runserver 0.0.0.0:5000
+web:gunicorn -w 4 app:app
