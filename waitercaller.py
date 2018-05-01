@@ -6,6 +6,7 @@ from mockdbhelper import MockDBHelper as DBHelper
 from user import User
 
 
+
 DB = DBHelper()
 app = Flask(__name__)
 app.secret_key = 'PLM7rVfkgQDDSYo1dYZ1Ig=='
