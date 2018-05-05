@@ -33,11 +33,6 @@ def load_user(user_id):
     if user_password:
         return User(user_id)
 
-@app.route("/account")
-@login_required
-def account():
-    return "You are logged in"
-
 @app.route("/logout")
 def logout():
     logout_user()
