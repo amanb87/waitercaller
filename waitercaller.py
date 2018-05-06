@@ -1,16 +1,19 @@
 import hashlib  #ships by default with Python 2.6+
 from flask import Flask,render_template, redirect, url_for,request
 from flask_login import LoginManager
-from flask_login import login_required, login_user, logout_user,current_user
+from flask_login import login_required, login_user, logout_user, current_user
 from mockdbhelper import MockDBHelper as DBHelper
 from passwordhelper import PasswwordHelper
 from user import User
 import config
+from bitlyhelper import BitlyHelper
 
 
 
 DB = DBHelper()
 PH = PasswwordHelper()
+BH = BitlyHelper()
+
 app = Flask(__name__)
 app.secret_key = 'PLM7rVfkgQDDSYo1dYZ1Ig=='
 login_manager = LoginManager(app)
@@ -69,7 +72,7 @@ def dashboard():
 def account_createtable():
     tablename = request.form.get("tablenumber")
     tableid = DB.add_table(tablename, current_user.get_id())
-    new_url = config.base_url + "newrequest/" + tableid
+    new_url = BH.shorten_url(config.base_url + "newrequest/" + tableid)
     DB.update_table(tableid,new_url)
     return redirect(url_for('account'))
 
