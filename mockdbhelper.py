@@ -31,6 +31,6 @@ class MockDBHelper:
 
    def delete_table(self, table_id):
        for i, table in enumerate(MOCK_TABLES):
-           if table_id("_id") == table_id:
+           if table.get("_id") == table_id:
                del MOCK_TABLES[i]
-           break
+               break
