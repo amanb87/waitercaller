@@ -1,10 +1,11 @@
 import hashlib  #ships by default with Python 2.6+
 from flask import Flask,render_template, redirect, url_for,request
 from flask_login import LoginManager
-from flask_login import login_required, login_user, logout_user
+from flask_login import login_required, login_user, logout_user,current_user
 from mockdbhelper import MockDBHelper as DBHelper
 from passwordhelper import PasswwordHelper
 from user import User
+import config
 
 
 
@@ -43,6 +44,8 @@ def register():
     DB.add_user(email, salt, hashed)
     return redirect(url_for('home'))
 
+"""The decorator below indicates to Flask-Login that this is the function we want to use to handle users who already have a cookie assigned, 
+  and it'll pass the user_id variable from the cookie to this function whenever a user visits our site, which already has one."""
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -53,7 +56,22 @@ def load_user(user_id):
 @app.route("/account")
 @login_required
 def account():
-    return "You are logged in"
+    return render_template("account.html")
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("dashboard.html")
+
+@app.route('/account/createtable',methods=['POST'])
+@login_required
+def account_createtable():
+    tablename = request.form.get("tablenumber")
+    tableid = DB.add_table(tablename, current_user.get_id())
+    new_url = config.base_url + "newrequest/" + tableid
+    DB.update_table(tableid,new_url)
+    return redirect(url_for('account'))
+
 
 @app.route("/logout")
 def logout():
