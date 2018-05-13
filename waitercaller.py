@@ -7,7 +7,7 @@ from passwordhelper import PasswwordHelper
 from user import User
 import config
 from bitlyhelper import BitlyHelper
-
+import datetime
 
 
 DB = DBHelper()
@@ -65,7 +65,20 @@ def account():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    now = datetime.datetime.now()
+    requests = DB.get_requests(current_user.get_id())
+    for req in requests:
+        deltaseconds = (now - req['time']).total_seconds()
+        mins, secs = divmod(deltaseconds, 60)
+        req['wait_minutes'] = '%d:%d' % (mins, secs)
+    return render_template("dashboard.html", requests=requests)
+
+@app.route("/dashboard/resolve")
+@login_required
+def dashboard_resolve():
+    request_id = request.args.get("request_id")
+    DB.delete_request(request_id)
+    return redirect(url_for("dashboard"))
 
 @app.route('/account/createtable',methods=['POST'])
 @login_required
@@ -82,6 +95,11 @@ def account_deletetable():
     tableid = request.args.get("tableid")
     DB.delete_table(tableid)
     return redirect(url_for('account'))
+
+@app.route('/newrequest/<tid>')
+def new_request(tid):
+    DB.add_request(tid,datetime.datetime.now())
+    return "Your request has been logged and a waiter will be with you shortly"
 
 
 @app.route("/logout")
