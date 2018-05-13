@@ -1,7 +1,7 @@
 import urllib.request
 import json
 
-TOKEN = "f7d387da386580399fb6df96b9097c9f876d3ac5"
+TOKEN = "bitly_access_token"
 ROOT_URL = "https://api-ssl.bitly.com"
 SHORTEN = "/v3/shorten?access_token={}&longUrl={}"
 
