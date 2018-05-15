@@ -4,6 +4,8 @@ from flask_login import LoginManager
 from flask_login import login_required, login_user, logout_user, current_user
 from mockdbhelper import MockDBHelper as DBHelper
 from passwordhelper import PasswwordHelper
+from forms import RegistrationForm
+from forms import LoginForm, CreateTableForm
 from user import User
 import config
 from bitlyhelper import BitlyHelper
@@ -20,32 +22,41 @@ login_manager = LoginManager(app)
 
 @app.route("/")
 def home():
-   return render_template("home.html")
+    registrationform = RegistrationForm()
+    return render_template("home.html", loginform=LoginForm(), registrationform=registrationform)
 
 @app.route("/login", methods=['POST'])
 def login():
-    email = request.form.get("email")
-    password = request.form.get("password")
-    stored_user = DB.get_user(email)
-    if stored_user and PH.validate_password(password.encode(),stored_user['salt'],stored_user['hashed']):
-        user = User(email)
-        login_user(user, remember=True)                #add remember argument for persistent login session
-        return redirect(url_for('account'))
-    return home()
+    form = LoginForm()
+    if form.validate():
+        stored_user = DB.get_user(form.loginemail.data)
+        if stored_user and PH.validate_password(form.loginpassword.data.encode(), stored_user['salt'], stored_user['hashed']):
+            user = User(form.loginemail.data)
+            login_user(user,remember=True)
+            return redirect(url_for('account'))
+        form.loginemail.errors.append("Email or password invalid.")
+    return render_template("home.html", loginform=form, registrationform=RegistrationForm())
+    
+    # email = request.form.get("email")
+    # password = request.form.get("password")
+    # stored_user = DB.get_user(email)
+    # if stored_user and PH.validate_password(password.encode(),stored_user['salt'],stored_user['hashed']):
+    #     user = User(email)
+    #     login_user(user, remember=True)                #add remember argument for persistent login session
+    #     return redirect(url_for('account'))
 
 @app.route('/register', methods=['POST'])
 def register():
-    email = request.form.get("email")
-    pw1 = request.form.get("password")
-    pw2 = request.form.get("password2")
-    if not pw1 == pw2:
-        return redirect(url_for('home'))
-    if DB.get_user(email):
-        return redirect(url_for('home'))
-    salt = PH.get_salt()
-    hashed = PH.get_hash(pw1.encode() + salt)
-    DB.add_user(email, salt, hashed)
-    return redirect(url_for('home'))
+    form = RegistrationForm(request.form)
+    if form.validate():
+        if DB.get_user(form.email.data):
+            form.email.errors.append("Email address already registered.")
+            return render_template("home.html", loginform=LoginForm(), registrationform=form)
+        salt = PH.get_salt()
+        hashed = PH.get_hash(form.password2.data.encode() + salt)
+        DB.add_user(form.email.data, salt, hashed)
+        return render_template("home.html", loginform=LoginForm(), registrationform=form, onloadmessage="Registration successful. Please log in.")
+    return render_template("home.html", loginform=LoginForm(), registrationform=form)
 
 """The decorator below indicates to Flask-Login that this is the function we want to use to handle users who already have a cookie assigned, 
   and it'll pass the user_id variable from the cookie to this function whenever a user visits our site, which already has one."""
@@ -60,7 +71,7 @@ def load_user(user_id):
 @login_required
 def account():
     tables = DB.get_tables(current_user.get_id())
-    return render_template("account.html",tables=tables)
+    return render_template("account.html", createtableform=CreateTableForm(), tables=tables)
 
 @app.route("/dashboard")
 @login_required
@@ -83,11 +94,14 @@ def dashboard_resolve():
 @app.route('/account/createtable',methods=['POST'])
 @login_required
 def account_createtable():
-    tablename = request.form.get("tablenumber")
-    tableid = DB.add_table(tablename, current_user.get_id())
-    new_url = BH.shorten_url(config.base_url + "newrequest/" + tableid)
-    DB.update_table(tableid,new_url)
-    return redirect(url_for('account'))
+    form = CreateTableForm()
+    if form.validate():
+        tableid = DB.add_table(form.tablenumber.data, current_user.get_id())
+        new_url = BH.shorten_url(config.base_url + "newrequest/" + tableid)
+        DB.update_table(tableid, new_url)
+        return redirect(url_for("account"))
+    return render_template("account.html", createtableform=form, tables=DB.get_tables(current_user.get_id()))
+
 
 @app.route('/account/deletetable')
 @login_required
