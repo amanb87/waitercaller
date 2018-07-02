@@ -7,7 +7,7 @@ from passwordhelper import PasswwordHelper
 from forms import RegistrationForm
 from forms import LoginForm, CreateTableForm
 from user import User
-import config
+# import config
 from bitlyhelper import BitlyHelper
 import datetime
 
@@ -94,7 +94,7 @@ def dashboard_resolve():
 @app.route('/account/createtable',methods=['POST'])
 @login_required
 def account_createtable():
-    form = CreateTableForm()
+    form = CreateTableForm(request.form)
     if form.validate():
         tableid = DB.add_table(form.tablenumber.data, current_user.get_id())
         new_url = BH.shorten_url(config.base_url + "newrequest/" + tableid)
