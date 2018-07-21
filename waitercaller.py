@@ -2,7 +2,7 @@ import hashlib  #ships by default with Python 2.6+
 from flask import Flask,render_template, redirect, url_for,request
 from flask_login import LoginManager
 from flask_login import login_required, login_user, logout_user, current_user
-from mockdbhelper import MockDBHelper as DBHelper
+
 from passwordhelper import PasswwordHelper
 from forms import RegistrationForm
 from forms import LoginForm, CreateTableForm
@@ -10,6 +10,12 @@ from user import User
 # import config
 from bitlyhelper import BitlyHelper
 import datetime
+import config
+
+if config.test:
+    from mockdbhelper import MockDBHelper as DBHelper
+else:
+    from dbhelper import DBHelper
 
 
 DB = DBHelper()
@@ -97,7 +103,7 @@ def account_createtable():
     form = CreateTableForm(request.form)
     if form.validate():
         tableid = DB.add_table(form.tablenumber.data, current_user.get_id())
-        new_url = BH.shorten_url(config.base_url + "newrequest/" + tableid)
+        new_url = BH.shorten_url(config.base_url + "newrequest/" + str(tableid))
         DB.update_table(tableid, new_url)
         return redirect(url_for("account"))
     return render_template("account.html", createtableform=form, tables=DB.get_tables(current_user.get_id()))
