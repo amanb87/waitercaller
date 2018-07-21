@@ -23,7 +23,7 @@ PH = PasswwordHelper()
 BH = BitlyHelper()
 
 app = Flask(__name__)
-app.secret_key = 'PLM7rVfkgQDDSYo1dYZ1Ig=='
+app.secret_key = 'xxxxxxx'
 login_manager = LoginManager(app)
 
 @app.route("/")
